@@ -1,0 +1,22 @@
+<Number> = "0" | "1" | .... | "9"
+
+<DecimalNumber> = "0" | (("1" | .... | "9") <Number>* )
+十进制数表达：（可以是只有0，也可以是1xxxxx）Reg: /0|[1-9][0-9]*/
+
+<PrimaryExpression> = <DecimalNumber> | 
+    "(" <LogicalExpression> ")"
+
+<MultiplicativeExpression> = <PrimaryExpression> | 
+    <MultiplicativeExpression> "*" <PrimaryExpression> |
+    <MultiplicativeExpression> "/" <PrimaryExpression>
+乘法表达式：一个十进制数/多个十进制数连乘
+
+<AdditiveExpression> = <MultiplicativeExpression> | 
+    <AdditiveExpression> "+" <MultiplicativeExpression> |
+    <AdditiveExpression> "-" <MultiplicativeExpression>
+加法表达式：（可以是一个乘法表达式或一个乘法表达式与加法表达式相加）
+
+<LogicalExpression> = <AdditiveExpression> | 
+    <LogicalExpression> "||" <AdditiveExpression> |
+    <LogicalExpression> "&&" <AdditiveExpression>
+逻辑运算表达式
