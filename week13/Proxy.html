@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    </head>
+    <body>
+        <script>
+
+            let handlers = new Map()
+
+            let reactivities = new Map()
+
+            let usedReactivities = []
+
+            function reactive (obj) {
+                if (reactivities.has(obj)) {
+                    return reactivities.get(obj)
+                }
+
+                let proxy = new Proxy(obj, {
+                    get (obj, prop) {
+                        usedReactivities.push([obj, prop])
+                        if (typeof obj[prop] === 'object') {
+                            return reactive(obj[prop])
+                        }
+                        return obj[prop]
+                    },
+                    set (obj, prop, val) {
+                        obj[prop] = val
+                        if (handlers.get(obj))
+                            if (handlers.get(obj).get(prop))
+                                for (let handler of handlers.get(obj).get(prop))
+                                    handler()
+                        return obj[prop]
+                    }
+                })
+
+                reactivities.set(obj, proxy)
+                reactivities.set(proxy, proxy)
+
+                return proxy
+            }
+
+            function effect (handler) {
+                usedReactivities = []
+                handler()
+                
+                for(let usedReactivity of usedReactivities) {
+                    let [obj, prop] = usedReactivity
+                    if (!handlers.has(obj)) {
+                        handlers.set(obj, new Map())
+                    }
+                    if (!handlers.get(obj).has(prop)) {
+                        handlers.get(obj).set(prop, [])
+                    }
+
+                    handlers.get(obj).get(prop).push(handler)
+                }
+            }
+
+            let myFoo
+            let proxy = reactive({
+                foo: 1,
+                bar: {
+                    a: 2
+                }
+            })
+            effect(() => myFoo = proxy.bar.a)
+            console.log(myFoo)
+            proxy.bar.a = 10
+            console.log(myFoo)
+
+        </script>
+    </body>
+</html>
